@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from metrics_analyzer import detect_metric_anomalies
 
 
 def load_incident(file_path):
