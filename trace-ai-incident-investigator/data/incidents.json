@@ -1,0 +1,38 @@
+{
+  "incident_id": "INC-001",
+  "service": "payment-service",
+  "description": "Payment failures increased unexpectedly",
+  "events": [
+    {
+      "timestamp": "2026-10-21T14:00:00",
+      "type": "metric",
+      "name": "database_latency_ms",
+      "value": 120
+    },
+    {
+      "timestamp": "2026-10-21T14:07:00",
+      "type": "deployment",
+      "name": "version",
+      "value": "v2.4.1"
+    },
+    {
+      "timestamp": "2026-10-21T14:10:00",
+      "type": "metric",
+      "name": "database_latency_ms",
+      "value": 650
+    },
+    {
+      "timestamp": "2026-10-21T14:11:00",
+      "type": "log",
+      "name": "DatabaseTimeout",
+      "value": "Database connection timed out",
+      "severity": "ERROR"
+    },
+    {
+      "timestamp": "2026-10-21T14:14:00",
+      "type": "metric",
+      "name": "payment_error_rate",
+      "value": 18.7
+    }
+  ]
+}
