@@ -15,25 +15,17 @@ def display_incident(incident):
     print("=" * 50)
     print("TRACE — AI INCIDENT INVESTIGATOR")
     print("=" * 50)
-
     print(f"Incident ID: {incident['incident_id']}")
     print(f"Service: {incident['service']}")
     print(f"Description: {incident['description']}")
-
     print("\nINCIDENT EVENTS")
     print("-" * 50)
-
-    events = sorted(
-        incident["events"],
-        key=lambda event: event["timestamp"]
-    )
+    events = sorted(incident["events"],key=lambda event: event["timestamp"])
     for event in events:
-        print(
-            f"{event['timestamp']} | "
+        print(f"{event['timestamp']} | "
             f"{event['type']} | "
             f"{event['name']} | "
-            f"{event['value']}"
-        )
+            f"{event['value']}")
 
 
 def display_anomalies(incident):
@@ -53,7 +45,7 @@ def display_anomalies(incident):
         print("-" * 50)
 
 
-def diaplay_timeline(incident):
+def display_timeline(incident):
     timeline = build_timeline(incident["events"])
     print("\nINCIDENT TIMELINE")
     print("-" * 60)
