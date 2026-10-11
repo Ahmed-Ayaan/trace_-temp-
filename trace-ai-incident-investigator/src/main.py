@@ -66,15 +66,15 @@ def diaplay_timeline(incident):
 
 def display_correlations(incident):
     correlations = correlate_events(incident["events"])
-    print("\nEVENT CORRElATIONS")
-    PRINT("-" * 60)
+    print("\nEVENT CORRELATIONS")
+    print("-" * 60)
     if not correlations:
-        print("No deployment related events found.")
+        print("No deployment-related events found.")
         return
     for correlation in correlations:
-        ddeployment = correlations["deployment]
-        print(f"Deployment: {deployment['value']}"
-              f"at{deployment['timestamp']}")
+        deployment = correlation["deployment"]
+        print(f"Deployment: {deployment['value']} "
+            f"at {deployment['timestamp']}")
         if not correlation["related_events"]:
             print("No events found within the correlation window.")
         for event in correlation["related_events"]:
