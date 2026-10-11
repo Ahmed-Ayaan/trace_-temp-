@@ -47,7 +47,7 @@ def investigate_incident(incident):
             if event["type"] == "log":
                 if event["name"] == "DatabaseTimeout":
                     hypotheses["database_problem"][
-                        "score"                    ] += 2
+                        "score"] += 2
                     hypotheses["database_problem"][
                         "supporting_evidence"].append("A database timeout was recorded.")
     # Ranking the hyphothesis
