@@ -84,13 +84,22 @@ def display_investigation(incident):
     print(f"Incident ID: {result['incident_id']}")
     for index, hypothesis in enumerate(result["hypotheses"], start=1):
         print(f"\n{index}. {hypothesis['title']}")
-        print(f"   Rule-based score: {hypothesis['score']}")
+        print(f"   score: {hypothesis['score']}")
+        print(f"   Status: {hypothesis['status']}")
+        print("\nSupporting Evidence")
+
         if hypothesis["supporting_evidence"]:
-            print("   Supporting evidence:")
             for evidence in hypothesis["supporting_evidence"]:
-                print(f"   - {evidence}")
+                print(f"   - [{evidence['timestamp']}] "
+                       f"   -{evidence['description']}"
+                     )
         else:
             print("   No supporting evidence identified.")
+
+        print("\nMissing Evidence:")
+        for items in hypothesis["missing_evidence"]:
+            print(f"   - {items}")
+        print("-" * 60)    
     print("\nIMPORTANT:")
     print("These are preliminary hypotheses, not confirmed causes.")
         
