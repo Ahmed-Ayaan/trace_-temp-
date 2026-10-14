@@ -4,22 +4,14 @@ def detect_metric_anomalies(events, threshold=2.0):
     threshold=2.0 means a metric must be at least
     twice its baseline to be flagged.
     """
-    metric_events = [
-        event
-        for event in events
-        if event["type"] == "metric"
-    ]
+    metric_events = [event for event in events if event["type"] == "metric"]
     metrics = {}
-    # Group measurements by metric name.
     for event in metric_events:
         name = event["name"]
         metrics.setdefault(name, []).append(event)
     anomalies = []
-    # Analyze each metric separately.
     for name, measurements in metrics.items():
-        measurements.sort(
-            key=lambda event: event["timestamp"]
-        )
+        measurements.sort(key=lambda event: event["timestamp"])
         if len(measurements) < 2:
             continue
         baseline = measurements[0]["value"]
@@ -33,18 +25,13 @@ def detect_metric_anomalies(events, threshold=2.0):
                 continue
             ratio = current_value / baseline
             if ratio >= threshold:
-                increase_percent = (
-                    (current_value - baseline)
-                    / baseline
-                ) * 100
+                increase_percent = ((current_value - baseline)/ baseline) * 100
                 anomalies.append({
                     "timestamp": event["timestamp"],
                     "metric": name,
                     "baseline": baseline,
                     "observed": current_value,
-                    "increase_percent": round(
-                        increase_percent, 2
-                    ),
+                    "increase_percent": round(increase_percent, 2),
                     "severity": "HIGH"
                 })
 
