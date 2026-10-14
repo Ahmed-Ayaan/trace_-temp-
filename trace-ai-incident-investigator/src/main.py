@@ -4,7 +4,6 @@ from metrics_analyzer import detect_metric_anomalies
 from correlator import build_timeline, correlate_events
 from investigator import investigate_incident
 
-
 def load_incident(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         incident = json.load(file)
@@ -15,17 +14,25 @@ def display_incident(incident):
     print("=" * 50)
     print("TRACE — AI INCIDENT INVESTIGATOR")
     print("=" * 50)
+
     print(f"Incident ID: {incident['incident_id']}")
     print(f"Service: {incident['service']}")
     print(f"Description: {incident['description']}")
+
     print("\nINCIDENT EVENTS")
     print("-" * 50)
-    events = sorted(incident["events"],key=lambda event: event["timestamp"])
+
+    events = sorted(
+        incident["events"],
+        key=lambda event: event["timestamp"]
+    )
     for event in events:
-        print(f"{event['timestamp']} | "
+        print(
+            f"{event['timestamp']} | "
             f"{event['type']} | "
             f"{event['name']} | "
-            f"{event['value']}")
+            f"{event['value']}"
+        )
 
 
 def display_anomalies(incident):
@@ -40,20 +47,24 @@ def display_anomalies(incident):
         print(f"Time: {anomaly['timestamp']}")
         print(f"Baseline: {anomaly['baseline']}")
         print(f"Observed: {anomaly['observed']}")
-        print(f"Increase: {anomaly['increase_percent']}%")
+        print(f"Increase: "f"{anomaly['increase_percent']}%")
         print(f"Severity: {anomaly['severity']}")
         print("-" * 50)
 
 
 def display_timeline(incident):
     timeline = build_timeline(incident["events"])
+
     print("\nINCIDENT TIMELINE")
     print("-" * 60)
+
     for event in timeline:
-        print(f"{event['timestamp']} | "
+        print(
+            f"{event['timestamp']} | "
             f"{event['type'].upper():10} | "
             f"{event['name']} | "
-            f"{event['value']}")
+            f"{event['value']}"
+        )
 
 
 def display_correlations(incident):
@@ -65,45 +76,62 @@ def display_correlations(incident):
         return
     for correlation in correlations:
         deployment = correlation["deployment"]
-        print(f"Deployment: {deployment['value']} "
-            f"at {deployment['timestamp']}")
+        print(
+            f"Deployment: {deployment['value']} "
+            f"at {deployment['timestamp']}"
+        )
         if not correlation["related_events"]:
             print("No events found within the correlation window.")
         for event in correlation["related_events"]:
-            print(f"  +{event['minutes_after_deployment']} min | "
+            print(
+                f"  +{event['minutes_after_deployment']} min | "
                 f"{event['type']} | "
                 f"{event['name']} | "
-                f"{event['value']}")
+                f"{event['value']}"
+            )
         print("-" * 60)
 
 
 def display_investigation(incident):
     result = investigate_incident(incident)
+
     print("\nINVESTIGATION RESULTS")
     print("=" * 60)
+
     print(f"Incident ID: {result['incident_id']}")
-    for index, hypothesis in enumerate(result["hypotheses"], start=1):
+
+    for index, hypothesis in enumerate(
+        result["hypotheses"],
+        start=1,
+    ):
         print(f"\n{index}. {hypothesis['title']}")
-        print(f"   score: {hypothesis['score']}")
+        print(f"   Score: {hypothesis['score']}")
         print(f"   Status: {hypothesis['status']}")
-        print("\nSupporting Evidence")
+
+        print("\n   Supporting evidence:")
 
         if hypothesis["supporting_evidence"]:
             for evidence in hypothesis["supporting_evidence"]:
-                print(f"   - [{evidence['timestamp']}] "
-                       f"   -{evidence['description']}"
-                     )
+                print(
+                    f"   - [{evidence['timestamp']}] "
+                    f"{evidence['description']}"
+                )
         else:
-            print("   No supporting evidence identified.")
+            print("   - No supporting evidence identified.")
 
-        print("\nMissing Evidence:")
-        for items in hypothesis["missing_evidence"]:
-            print(f"   - {items}")
-        print("-" * 60)    
-    print("\nIMPORTANT:")
-    print("These are preliminary hypotheses, not confirmed causes.")
-        
-        
+        print("\n   Missing evidence:")
+
+        for item in hypothesis["missing_evidence"]:
+            print(f"   - {item}")
+
+        print("-" * 60)
+
+    print(
+        "\nThese are preliminary hypotheses, "
+        "not confirmed root causes."
+    )
+
+
 def main():
     project_root = Path(__file__).resolve().parent.parent
     data_path = project_root / "data" / "incidents.json"
