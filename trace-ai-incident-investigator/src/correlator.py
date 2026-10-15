@@ -24,13 +24,8 @@ def correlate_events(events, window_minutes=10):
                     "type": event["type"],
                     "name": event["name"],
                     "value": event["value"],
-                    "minutes_after_deployment": round(time_difference, 2z)
+                    "minutes_after_deployment": round(time_difference, 2)
                 })
-
         if related_events:
-            correlations.append({
-                "deployment": deployment,
-                "related_events": related_events
-            })
-
+            correlations.append({"deployment": deployment,"related_events": related_events})
     return correlations
