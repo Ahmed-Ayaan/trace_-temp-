@@ -2,6 +2,19 @@
   "incident_id": "INC-001",
   "service": "payment-service",
   "description": "Payment failures increased unexpectedly",
+  "technology": {
+    "application": "payment-service",
+    "database": "PostgreSQL",
+    "database_image": "",
+    "current_version": "v2.4.1"
+  },
+  "investigation_context": {
+    "symptoms": [
+      "Database latency increased",
+      "Database connection timed out",
+      "Payment error rate increased"
+    ]
+  },
   "events": [
     {
       "timestamp": "2026-10-21T14:00:00",
