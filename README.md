@@ -5,11 +5,7 @@
 
 **From scattered incident signals to evidence-backed root-cause hypotheses.**
 
-TRACE is a prototype investigation workflow that analyzes incident data, connects related events, and brings technical context into one structured investigation report.
-
-<br/>
-
-**AZINHACK ’26 · Project submission**
+The current TRACE is a prototype investigation workflow that analyzes incident data, connects related events, and brings technical context into one structured investigation report.
 
 </div>
 
@@ -54,23 +50,6 @@ flowchart TD
     D --> E["Structured investigation output<br/>src/main.py"]
 ```
 
-### Intended end-to-end workflow
-
-```mermaid
-flowchart TD
-    A["Logs, metrics and change events"] --> B["Normalize incident data"]
-    B --> C["Metric analysis"]
-    C --> D["Timeline and correlation"]
-    D --> E["Candidate hypotheses"]
-    E --> F["Targeted TinyFish research"]
-    F --> G["Fetch and inspect source pages"]
-    G --> H["Attach source-grounded findings"]
-    H --> I["Evaluate hypotheses and identify missing evidence"]
-    I --> J["Investigation report and next checks"]
-```
-
-The second diagram represents the **target workflow**, not a claim that every stage is already implemented. See the status table below.
-
 ---
 
 ## Example investigation: `INC-002`
@@ -96,28 +75,6 @@ A strong TRACE report should distinguish:
 | **Next diagnostic step** | Inspect connection-pool settings and compare relevant metrics before and after the change. |
 
 This is an example of the investigation logic—not a claim that the deployment has been proven to be the root cause.
-
----
-
-## Implementation status
-
-This table is intentionally conservative. Update it after testing the exact commit being submitted.
-
-| Component | Status |
-|---|---|
-| Static incident input (`data/incidents.json`) | Current development input |
-| Python entry point (`src/main.py`) | Present in the current project workflow |
-| Metric analysis (`metrics_analyzer.py`) | Prototype implementation; validate edge cases |
-| Event correlation (`correlator.py`) | Prototype implementation; validate event ordering and relationships |
-| Investigation logic (`investigator.py`) | Prototype; verify report contents against current output |
-| TinyFish external research | Search workflow has been explored; confirm Search + Fetch works end-to-end before claiming full integration |
-| LLM-based hypothesis generation or ranking | Do not mark complete until integrated and tested |
-| FastAPI endpoint | Planned unless the endpoint exists and runs |
-| React + Vite dashboard | Planned unless the UI exists and runs |
-| Docker packaging | Planned unless a clean container run has been tested |
-| Live telemetry / OpenTelemetry | Future extension unless live ingestion is working |
-
-**Submission rule:** The README, presentation, demo, and repository must describe the same implementation. Move a feature into “implemented” only when you can demonstrate it working.
 
 ---
 
@@ -210,52 +167,16 @@ Before publishing, add a real example from the working integration: the query, a
 
 ---
 
-## Reliability and evaluation
+## Current Limitations
 
-TRACE should be judged on the quality of its investigation trail—not on how confident its final wording sounds.
-
-Before submission, test the following:
-
-- [ ] The sample incident loads from a clean checkout.
-- [ ] Timestamps are parsed and events are ordered consistently.
-- [ ] Missing values and insufficient metric samples are handled explicitly.
-- [ ] Anomaly output includes the relevant metric, timestamp, baseline, and observed value when available.
-- [ ] Correlation does not get described as proof of causation.
-- [ ] Hypotheses are connected to specific evidence and useful verification steps.
-- [ ] External findings preserve source URLs and are based on fetched source content.
-- [ ] Empty search results and failed requests do not crash the investigation.
-- [ ] Re-running the same input produces reproducible output.
-- [ ] The demo works using the documented setup commands.
-
-If a metric has too few samples, the system should report **insufficient data** rather than silently treating it as normal.
-
----
-
-## Limitations
-
-- **Static fixtures are not live production telemetry.** They make development and demos reproducible, but do not establish real-world performance.
-- **Correlation is not causation.** Events occurring close together can be unrelated.
-- **External sources can mislead.** A similar issue in a release note or forum may not explain the current incident.
-- **AI-generated hypotheses can be wrong.** Candidate explanations require evidence and verification.
-- **Confidence needs a basis.** Do not present a ranking as a calibrated probability unless it has been evaluated as one.
-
-TRACE is intended to support engineers by organizing evidence and proposing checks, not to replace incident-response judgment.
-
----
-
-## Roadmap
-
-Prioritize a working end-to-end investigation over a large set of disconnected features.
-
-1. **Stabilize the core** — improve input validation, metric edge cases, correlation, and reproducible reports.
-2. **Complete external research** — connect TinyFish Search + Fetch and retain source-grounded evidence.
-3. **Improve hypothesis evaluation** — compare alternatives and identify missing or contradictory evidence.
-4. **Add LLM reasoning** — use structured outputs and ground explanations in available evidence.
-5. **Expose an API** — add FastAPI once the investigation engine has a stable interface.
-6. **Build the dashboard** — use React + Vite to display the timeline, evidence, and candidate causes.
-7. **Support live operation** — add telemetry ingestion and Docker packaging after the core workflow is reliable.
-
-The order can change to meet the hackathon deadline. Each item should be marked complete only after it runs and can be demonstrated.
+- **Static input:** Incident data is provided through a JSON file; live telemetry ingestion is not implemented.
+- **Basic anomaly detection:** Metric detection uses a simple threshold rather than a statistical or learned baseline.
+- **Predefined hypotheses:** Hypotheses and scoring rules are predefined rather than generated through LLM reasoning.
+- **Scores are not probabilities:** Hypothesis scores indicate relative ranking and should not be interpreted as calibrated probabilities.
+- **Correlation is not causation:** An event occurring near a deployment does not prove that the deployment caused the incident.
+- **Separate external research:** TinyFish research results do not currently affect the hypothesis ranking.
+- **Preliminary findings:** Hypotheses are investigative leads that require verification, not confirmed root causes.
+- **No frontend dashboard:** The current prototype does not include a frontend dashboard.
 
 ---
 
@@ -271,7 +192,5 @@ The order can change to meet the hackathon deadline. Each item should be marked 
 <div align="center">
 
 **TRACE — make the investigation inspectable.**
-
-*AZINHACK ’26*
 
 </div>
