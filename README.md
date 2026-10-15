@@ -1,287 +1,261 @@
-<div align="center">
+# TRACE — AI Incident Investigator
 
-# TRACE
-### AI Incident Investigator
+> **AZINHACK ’26 | Project submission: 18 October 2026**  
+> TRACE aims to help engineers move from incident alerts to evidence-backed root-cause hypotheses by connecting operational signals, event timelines, and targeted external technical research.
 
-**From scattered incident signals to evidence-backed root-cause hypotheses.**
-
-TRACE is a prototype investigation workflow that analyzes incident data, connects related events, and brings technical context into one structured investigation report.
-
-<br/>
-
-**AZINHACK ’26 · Project submission · 18 October 2026**
-
-</div>
+**Status:** Working prototype. The current Python investigation pipeline is being developed and tested against the `INC-002` database-connection-timeout scenario. TinyFish, LLM reasoning, the web dashboard, API service, Docker packaging, and live telemetry ingestion must be marked as implemented only after they have been integrated and tested.
 
 ---
 
-## The problem
+## 1. The problem
 
-When a production service fails, the clues are rarely in one place.
+When a production service fails, useful clues may be scattered across:
 
-- **Logs** show errors, but not necessarily the underlying cause.
-- **Metrics** reveal unusual behavior, but anomalies can have multiple explanations.
-- **Deployment and configuration events** provide context, but timing alone does not prove causation.
-- **Technical documentation and issue reports** can help explain a failure, but a similar issue elsewhere is not proof that it caused this incident.
+- Application logs and error messages
+- Metrics such as latency, request rate, and resource or connection utilization
+- Deployment and configuration changes
+- Technical documentation, release notes, and issue reports
 
-Engineers must connect these signals, evaluate competing explanations, and determine what to check next.
+Finding a plausible cause means connecting these signals and checking whether the evidence supports the explanation. A correlation in time is a clue, not proof of causation.
 
-## Our approach
+## 2. What TRACE is designed to do
 
-TRACE is designed to make that investigation more structured and inspectable.
+TRACE is an AI-assisted incident-investigation workflow intended to:
 
-| Stage | What it does |
-|---|---|
-| **Analyze** | Examine incident metrics and identify unusual behavior. |
-| **Correlate** | Place relevant events on a timeline and identify relationships worth investigating. |
-| **Research** | Use TinyFish to search for and fetch relevant external technical sources. |
-| **Evaluate** | Compare candidate explanations against available evidence. |
-| **Report** | Present observations, hypotheses, source context, uncertainty, and next diagnostic checks. |
+1. **Analyze** incident metrics and identify unusual behavior.
+2. **Correlate** logs, measurements, and events into an incident timeline.
+3. **Research** relevant external technical sources using TinyFish.
+4. **Evaluate** competing root-cause hypotheses against the available evidence.
+5. **Report** observations, supporting and contradicting evidence, uncertainty, and useful next diagnostic checks.
 
-> **Principle:** Separate observed facts from inferred causes. A useful investigation should show *why* a hypothesis is plausible and *what evidence is still missing*.
+The goal is to make the investigation trail inspectable—not to claim that an AI-generated explanation is automatically correct.
 
----
+## 3. Current implementation status
 
-## How it works
-
-### Current prototype
-
-```mermaid
-flowchart TD
-    A["Incident fixture<br/>data/incidents.json"] --> B["Metric analysis<br/>metrics_analyzer.py"]
-    B --> C["Timeline and event correlation<br/>correlator.py"]
-    C --> D["Investigation logic<br/>investigator.py"]
-    D --> E["Structured investigation output<br/>src/main.py"]
-```
-
-### Intended end-to-end workflow
-
-```mermaid
-flowchart TD
-    A["Logs, metrics and change events"] --> B["Normalize incident data"]
-    B --> C["Metric analysis"]
-    C --> D["Timeline and correlation"]
-    D --> E["Candidate hypotheses"]
-    E --> F["Targeted TinyFish research"]
-    F --> G["Fetch and inspect source pages"]
-    G --> H["Attach source-grounded findings"]
-    H --> I["Evaluate hypotheses and identify missing evidence"]
-    I --> J["Investigation report and next checks"]
-```
-
-The second diagram represents the **target workflow**, not a claim that every stage is already implemented. See the status table below.
-
----
-
-## Example investigation: `INC-002`
-
-The current project scenario concerns database connection acquisition timeouts.
-
-A useful investigation may examine:
-
-- Application logs containing connection timeout errors.
-- Metric behavior around the incident window.
-- Deployment or configuration events that occurred near the failure.
-- Relevant documentation, release notes, or issue reports found through external research.
-
-A deployment-related regression could be one candidate explanation—but it is not the only one. Connection-pool exhaustion, slow queries, database saturation, traffic changes, or configuration problems may also fit the symptoms.
-
-A strong TRACE report should distinguish:
-
-| Category | Example |
-|---|---|
-| **Observation** | Application logs report connection acquisition timeouts. |
-| **Candidate hypothesis** | A recent change may have increased connection demand. |
-| **Evidence still needed** | Connection-pool utilization, query latency, deployment diff, and before/after comparisons. |
-| **Next diagnostic step** | Inspect connection-pool settings and compare relevant metrics before and after the change. |
-
-This is an example of the investigation logic—not a claim that the deployment has been proven to be the root cause.
-
----
-
-## Implementation status
-
-This table is intentionally conservative. Update it after testing the exact commit being submitted.
+Update this table immediately before submission so it matches the repository and demo.
 
 | Component | Status |
 |---|---|
-| Static incident input (`data/incidents.json`) | Current development input |
-| Python entry point (`src/main.py`) | Present in the current project workflow |
-| Metric analysis (`metrics_analyzer.py`) | Prototype implementation; validate edge cases |
-| Event correlation (`correlator.py`) | Prototype implementation; validate event ordering and relationships |
-| Investigation logic (`investigator.py`) | Prototype; verify report contents against current output |
-| TinyFish external research | Search workflow has been explored; confirm Search + Fetch works end-to-end before claiming full integration |
-| LLM-based hypothesis generation or ranking | Do not mark complete until integrated and tested |
-| FastAPI endpoint | Planned unless the endpoint exists and runs |
-| React + Vite dashboard | Planned unless the UI exists and runs |
-| Docker packaging | Planned unless a clean container run has been tested |
-| Live telemetry / OpenTelemetry | Future extension unless live ingestion is working |
+| Python investigation pipeline for the current incident fixture | In progress / prototype |
+| Metric analysis and anomaly checks | Implemented in the current prototype; validate with tests |
+| Event timeline and correlation | Implemented in the current prototype; validate with tests |
+| Candidate hypotheses and report output | Prototype; verify the exact output before claiming completion |
+| TinyFish Search + Fetch integration | Planned until tested end-to-end |
+| LLM-based hypothesis generation/ranking | Planned until tested end-to-end |
+| FastAPI service | Planned until tested end-to-end |
+| React + Vite dashboard | Planned until tested end-to-end |
+| Docker packaging | Planned until tested end-to-end |
+| Live telemetry from an instrumented application | Planned / in progress; describe only the working ingestion path |
 
-**Submission rule:** The README, presentation, demo, and repository must describe the same implementation. Move a feature into “implemented” only when you can demonstrate it working.
+**Important:** Do not present a planned feature as working. Replace the status labels above with precise, verifiable claims before submission.
 
----
+## 4. Architecture
 
-## Repository layout
+### Current prototype flow
 
-The core files currently used in the project are:
 ```text
-.
+Incident input
+     |
+     v
+Metric analysis
+     |
+     v
+Timeline and event correlation
+     |
+     v
+Candidate hypotheses
+     |
+     v
+Investigation report
+```
+
+### Intended end-to-end flow
+
+```text
+Instrumented application / telemetry
+     |
+     v
+Normalized logs, metrics and change events
+     |
+     v
+Metric analysis + timeline/correlation
+     |
+     +-----------------------------+
+     |                             |
+     v                             v
+Internal evidence             TinyFish research
+                                   |
+                              Search + Fetch
+                                   |
+                                   v
+                         Source-grounded findings
+     |                             |
+     +-------------+---------------+
+                   |
+                   v
+       Hypothesis generation and checks
+                   |
+                   v
+ Evidence-linked report + next diagnostic actions
+```
+
+The intended design separates **observed facts**, **external context**, and **inferred explanations**. External search results should retain source URLs and relevant excerpts. A similar issue found online is not, by itself, proof of the incident's cause.
+
+## 5. Repository structure
+
+The current project structure is expected to resemble:
+
+```text
+TRACE-AI-INCIDENT-INVESTIGATOR/
 ├── data/
 │   └── incidents.json
-└── src/
-    ├── main.py
-    ├── metrics_analyzer.py
-    ├── correlator.py
-    ├── investigator.py
-    └── web_research.py
+├── src/
+│   ├── main.py
+│   ├── metrics_analyzer.py
+│   ├── correlator.py
+│   ├──  investigator.py
+|   └── web_research.py
+|
+├── tests/
+├── .env                 # local secrets; do not commit
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
 
-The repository may contain additional files. Keep this tree synchronized with the actual checkout; do not list planned modules as though they already exist.
+This is a guide, not a guarantee that every path exists in the current checkout. Adjust it to match the actual repository. Add files such as `web_research.py`, `llm_analyzer.py`, `report_generator.py`, or `api.py` only when they exist.
 
----
+## 6. Getting started
 
-## Run the prototype
+### Requirements
 
-Run from the **repository root**.
+- Python 3.10+ (use the version tested by the project)
+- Git
+- API credentials only for integrations that are actually enabled
 
-### 1. Clone the repository
-
-Replace the placeholder with your actual GitHub repository URL:
+### Clone the repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
-cd <YOUR_REPOSITORY_DIRECTORY>
+git clone <YOUR_GITHUB_REPOSITORY_URL>
+cd TRACE-AI-INCIDENT-INVESTIGATOR
 ```
 
-### 2. Create a virtual environment
+### Create and activate a virtual environment
 
 **macOS / Linux**
-
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
 **Windows PowerShell**
-
 ```powershell
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-### 3. Install dependencies
-
-If the repository includes a maintained `requirements.txt`:
+### Install dependencies
 
 ```bash
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
-If it does not, add and test a dependency file before submission. Do not install packages blindly; use the dependencies required by the code.
+If `requirements.txt` is not complete yet, install only the dependencies actually used by the current code and update the file before asking judges to run the project.
 
-### 4. Run the current entry point
+### Run the current prototype
+
+From the repository root:
 
 ```bash
 python3 src/main.py
 ```
 
-On Windows, use `python src/main.py` if that is the Python command configured on your system.
+On Windows, `python src/main.py` may be the appropriate command.
 
-**Verify these commands from a clean environment before submission.** If the actual entry point, setup process, or dependencies differ, update this section to match the tested procedure.
+If the entry point or command differs in the current repository, replace this command with the verified one. A README should contain a command that has been tested from a clean environment.
 
----
+## 7. Example investigation: database connection timeouts
 
-## TinyFish: external research
+The current project scenario, `INC-002`, concerns database connection acquisition timeouts.
 
-The intended role of TinyFish is to extend the investigation with relevant external technical context—not to make the root-cause decision by itself.
+Potential evidence may include:
 
-The research flow should:
+- Application errors reporting connection acquisition timeouts
+- Metric changes around the incident window
+- A deployment or configuration event close to the start of failures
+- Relevant external documentation or release notes, once research integration is implemented
 
-1. Build a targeted query from the incident error, component, version, and relevant context.
-2. Search for candidate documentation, release notes, or issue pages.
-3. Fetch promising pages and inspect their contents.
-4. Preserve source URLs and relevant excerpts.
-5. Explain whether each source supports, contradicts, or merely contextualizes a hypothesis.
-6. Handle empty results, failed fetches, irrelevant pages, and API errors.
+A deployment-related regression is only one possible hypothesis. Other possibilities include connection-pool exhaustion, query latency, traffic changes, database saturation, or configuration issues.
 
-A search-result title or snippet is not enough to establish a technical claim. The report should make it possible to inspect the source behind an external finding.
+TRACE should identify what was actually observed, explain why a hypothesis is plausible, and state which measurements or checks are needed to verify it. If there are too few samples, the result should say **insufficient data** rather than silently treating the metric as normal.
 
-Before publishing, add a real example from the working integration: the query, a fetched source URL, a relevant excerpt, and how it affected the investigation. Do not include API keys, private tokens, or sensitive incident data.
+## 8. TinyFish integration plan
 
----
+The intended external-research workflow is:
 
-## Reliability and evaluation
+1. Build a targeted query from the error message, technology, version, and incident context.
+2. Search for potentially relevant technical sources.
+3. Select and fetch candidate pages.
+4. Extract only relevant, source-supported information.
+5. Preserve each source URL and relevant excerpt.
+6. Link findings to the hypothesis they support, contradict, or merely contextualize.
+7. Handle empty results, failed fetches, rate limits, and irrelevant pages.
 
-TRACE should be judged on the quality of its investigation trail—not on how confident its final wording sounds.
+Only describe this as implemented after the complete workflow has been run successfully. Do not commit API keys or place secrets in screenshots, logs, or the repository.
 
-Before submission, test the following:
+## 9. Testing and evaluation
 
-- [ ] The sample incident loads from a clean checkout.
-- [ ] Timestamps are parsed and events are ordered consistently.
-- [ ] Missing values and insufficient metric samples are handled explicitly.
-- [ ] Anomaly output includes the relevant metric, timestamp, baseline, and observed value when available.
-- [ ] Correlation does not get described as proof of causation.
-- [ ] Hypotheses are connected to specific evidence and useful verification steps.
-- [ ] External findings preserve source URLs and are based on fetched source content.
-- [ ] Empty search results and failed requests do not crash the investigation.
-- [ ] Re-running the same input produces reproducible output.
-- [ ] The demo works using the documented setup commands.
+Useful tests for the prototype include:
 
-If a metric has too few samples, the system should report **insufficient data** rather than silently treating it as normal.
+- The incident file loads correctly and malformed input is handled.
+- Timestamps are parsed and events are ordered consistently.
+- Metric analysis handles missing values and insufficient samples.
+- Anomalies are reported with the baseline, observed value, and timestamp when available.
+- Correlation logic does not treat timing alone as causal proof.
+- Hypotheses distinguish supporting evidence from missing or contradictory evidence.
+- External findings retain their source URLs and are not fabricated.
+- Repeated runs on the same input produce reproducible output.
 
----
+Before the submission, run the project from a clean environment and capture the actual output for the demo.
 
-## Limitations
+## 10. Limitations
 
-- **Static fixtures are not live production telemetry.** They make development and demos reproducible, but do not establish real-world performance.
-- **Correlation is not causation.** Events occurring close together can be unrelated.
-- **External sources can mislead.** A similar issue in a release note or forum may not explain the current incident.
-- **AI-generated hypotheses can be wrong.** Candidate explanations require evidence and verification.
-- **Confidence needs a basis.** Do not present a ranking as a calibrated probability unless it has been evaluated as one.
+- Static incident fixtures are useful for repeatable development tests but do not demonstrate performance on live production telemetry.
+- Statistical anomalies and temporal correlation do not prove root cause.
+- External pages can be stale, irrelevant, or describe a superficially similar issue.
+- LLM-generated explanations can be wrong or overconfident.
+- Diagnostic quality depends on the completeness and quality of available evidence.
+- Any confidence or ranking score must have a clear basis; it should not be presented as a calibrated probability unless it has been validated.
 
-TRACE is intended to support engineers by organizing evidence and proposing checks, not to replace incident-response judgment.
+## 11. Roadmap
 
----
+1. Stabilize and test the Python investigation core.
+2. Connect a running instrumented application and ingest real logs/metrics through a clear normalized-event interface.
+3. Integrate TinyFish Search + Fetch and preserve source-grounded evidence.
+4. Add LLM-assisted hypothesis generation and evidence-aware evaluation.
+5. Expose the workflow through FastAPI.
+6. Build a React + Vite incident dashboard.
+7. Package the tested system with Docker and document a reproducible run.
 
-## Roadmap
+The order may change as the hackathon deadline approaches. Prioritize a small, end-to-end workflow that can be run and demonstrated reliably.
 
-Prioritize a working end-to-end investigation over a large set of disconnected features.
+## 12. Team
 
-1. **Stabilize the core** — improve input validation, metric edge cases, correlation, and reproducible reports.
-2. **Complete external research** — connect TinyFish Search + Fetch and retain source-grounded evidence.
-3. **Improve hypothesis evaluation** — compare alternatives and identify missing or contradictory evidence.
-4. **Add LLM reasoning** — use structured outputs and ground explanations in available evidence.
-5. **Expose an API** — add FastAPI once the investigation engine has a stable interface.
-6. **Build the dashboard** — use React + Vite to display the timeline, evidence, and candidate causes.
-7. **Support live operation** — add telemetry ingestion and Docker packaging after the core workflow is reliable.
-
-The order can change to meet the hackathon deadline. Each item should be marked complete only after it runs and can be demonstrated.
-
----
-
-## Team and links
-
-- **Team:** `[Team Name]`
-- **Members and contributions:** `[Names — contribution for each member]`
-- **Institution:** `[College / University]`
-- **GitHub:** `[Repository URL]`
-- **Demo:** `[Demo URL, if available]`
+- **Team name:** [Team Name]
+- **Members:** [Names and contributions]
+- **Institution:** [College / University]
+- **Demo:** [Demo URL, if available]
+- **Repository:** [GitHub URL]
 
 ---
 
-## Security
+## Submission checklist
 
-- Keep API keys and tokens in environment variables or a local `.env` file.
-- Add `.env` and other secret-bearing files to `.gitignore`.
-- Never commit credentials, private telemetry, or sensitive production logs.
-- Use sanitized incident fixtures for public demos.
-
----
-
-<div align="center">
-
-**TRACE — make the investigation inspectable.**
-
-*AZINHACK ’26 · 18 October 2026*
-
-</div>
+- [ ] Replace all placeholders.
+- [ ] Confirm the setup and run commands work from a clean checkout.
+- [ ] Ensure `requirements.txt` lists the dependencies required to run the project.
+- [ ] Ensure `.env` and API keys are excluded from Git.
+- [ ] Update implementation status to match tested code.
+- [ ] Add real output and, once integrated, actual TinyFish search/fetch examples.
+- [ ] Explain how to reproduce the `INC-002` investigation.
+- [ ] Remove any claims that cannot be demonstrated from the repository.
