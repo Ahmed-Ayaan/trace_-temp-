@@ -5,7 +5,7 @@
 
 **From scattered incident signals to evidence-backed root-cause hypotheses.**
 
-The current TRACE is a prototype investigation workflow that analyzes incident data, connects related events, and brings technical context into one structured investigation report.
+The current TRACE is a prototype AI-assisted incident investigation system that helps developers investigate application failures by analyzing incident events, detecting metric anomalies, correlating events with deployments, ranking preliminary root-cause hypotheses, and retrieving relevant external information.
 
 </div>
 
