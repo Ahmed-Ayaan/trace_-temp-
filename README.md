@@ -83,14 +83,19 @@ This is an example of the investigation logic—not a claim that the deployment 
 The core files currently used in the project are:
 
 ```text
-.
+TRACE/
 ├── data/
 │   └── incidents.json
-└── src/
-    ├── main.py
-    ├── metrics_analyzer.py
-    ├── correlator.py
-    └── investigator.py
+├── src/
+│   ├── main.py
+│   ├── correlator.py
+│   ├── metrics_analyzer.py
+│   ├── investigator.py
+│   └── web_research.py
+├── .env.example
+├── .gitignore
+├── requirements.txt
+└── README.md
 ```
 
 The repository may contain additional files. Keep this tree synchronized with the actual checkout; do not list planned modules as though they already exist.
