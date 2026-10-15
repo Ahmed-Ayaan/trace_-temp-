@@ -3,61 +3,46 @@ from pathlib import Path
 import requests
 from dotenv import load_dotenv
 
-# Project configuration
+# project configuration
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
 API_KEY = os.getenv("TINYFISH_API_KEY")
 SEARCH_URL = "https://api.search.tinyfish.ai"
 FETCH_URL = "https://api.fetch.tinyfish.ai"
 
-
 def search_web(query):
-    """Search the web using TinyFish Search."""
     if not API_KEY:
-        raise RuntimeError(
-            "TINYFISH_API_KEY is missing from .env"
-        )
+        raise RuntimeError("TINYFISH_API_KEY is missing from .env")
     response = requests.get(
         SEARCH_URL,
         headers={"X-API-Key": API_KEY},
-        params={
-            "query": query,
+        params={"query": query,
             "location": "IN",
-            "language": "en",
-        },
-        timeout=30,
+            "language": "en"},
+        timeout=30
     )
     response.raise_for_status()
     data = response.json()
     return data.get("results", [])
 
 def fetch_pages(urls):
-    """Fetch webpage contents using TinyFish Fetch."""
     if not API_KEY:
-        raise RuntimeError(
-            "TINYFISH_API_KEY is missing from .env"
-        )
+        raise RuntimeError("TINYFISH_API_KEY is missing from .env")
     if not urls:
         return []
-
     response = requests.post(
         FETCH_URL,
-        headers={
-            "X-API-Key": API_KEY,
-            "Content-Type": "application/json",
-        },
-        json={
-            "urls": urls[:3],
-            "format": "markdown",
-        },
-        timeout=90,
+        headers={"X-API-Key": API_KEY,
+            "Content-Type": "application/json"},
+        json={"urls": urls[:3],
+            "format": "markdown"},
+        timeout=90
     )
     response.raise_for_status()
     data = response.json()
     return data.get("results", [])
 
 def build_search_query(incident):
-    """Construct a search query from incident details."""
     technology = incident.get("technology", {})
     context = incident.get("investigation_context", {})
     application = technology.get("application", "")
@@ -66,108 +51,71 @@ def build_search_query(incident):
     version = technology.get("current_version", "")
     symptoms = context.get("symptoms", [])
     symptom_text = " ".join(symptoms[:2])
-    query_parts = [
-        application,
+    query_parts = [application,
         database,
         dependency,
         version,
         symptom_text,
-        "known issues",
-    ]
-    return " ".join(
-        part for part in query_parts if part
-    )
+        "known issues"]
+    return " ".join(part for part in query_parts if part)
 
 def research_incident(incident):
-    """
-    Search for external information relevant to an incident,
-    fetch selected webpages, and return the findings.
-    """
     query = build_search_query(incident)
     print("\nTRACE EXTERNAL RESEARCH")
     print("=" * 60)
     print(f"Search query: {query}")
-    # Stage 1: Discover webpages.
     search_results = search_web(query)
     if not search_results:
-        return {
-            "query": query,
+        return {"query": query,
             "sources": [],
-            "message": "No search results were returned.",
-        }
-    # Stage 2: Select candidate URLs.
+            "message": "No search results were returned."}
     candidates = []
     for result in search_results:
         url = result.get("url")
         if not url:
             continue
-        candidates.append({
-            "title": result.get("title", ""),
+        candidates.append({"title": result.get("title", ""),
             "url": url,
-            "snippet": result.get("snippet", ""),
-        })
+            "snippet": result.get("snippet", "")})
         if len(candidates) == 3:
             break
     if not candidates:
-        return {
-            "query": query,
+        return {"query": query,
             "sources": [],
-            "message": "No usable URLs were returned.",
-        }
+            "message": "No usable URLs were returned."}
     print(f"\nCandidate webpages: {len(candidates)}")
-    for index, candidate in enumerate(candidates, start=1):
+    for index, candidate in enumerate(candidates,start=1):
         print(f"{index}. {candidate['title']}")
         print(f"   {candidate['url']}")
-    # Stage 3: Retrieve webpage contents.
     urls = [candidate["url"] for candidate in candidates]
     fetched_pages = fetch_pages(urls)
-    # Stage 4: Match fetched content with search metadata.
-    candidates_by_url = {
-        candidate["url"]: candidate
-        for candidate in candidates
-    }
+    candidates_by_url = {candidate["url"]: candidate for candidate in candidates}
     sources = []
     for page in fetched_pages:
         url = page.get("url", "")
         candidate = candidates_by_url.get(url, {})
         sources.append({
-            "title": page.get(
-                "title",
-                candidate.get("title", ""),
-            ),
-            "url": page.get(
-                "url",
-                candidate.get("url", ""),
-            ),
+            "title": page.get("title",candidate.get("title", "")),
+            "url": page.get("url",candidate.get("url", "")),
             "snippet": candidate.get("snippet", ""),
-            "content": page.get("text", ""),
+            "content": page.get("text", "")
         })
-    return {
-        "query": query,
+    return {"query": query,
         "sources": sources,
-        "message": (
-            "External research completed."
-            if sources
-            else "No readable webpage content was returned."
-        ),
-    }
+        "message": ("External research completed." if sources
+            else "No readable webpage content was returned.")}
 
 def main():
-    incident_path = (
-        PROJECT_ROOT / "data" / "incidents.json"
-    )
+    incident_path = (PROJECT_ROOT / "data" / "incidents.json")
     import json
-    with open(incident_path, "r", encoding="utf-8") as file:
+    with open(incident_path,"r",encoding="utf-8") as file:
         incident = json.load(file)
     try:
         result = research_incident(incident)
         print("\nRESEARCH RESULTS")
         print("=" * 60)
         print(result["message"])
-        for index, source in enumerate(
-            result["sources"],
-            start=1,
-        ):
+        for index, source in enumerate(result["sources"],start=1):
             print(f"\nSOURCE {index}")
             print("-" * 60)
             print(f"Title: {source['title']}")
