@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
+import requests
 from metrics_analyzer import detect_metric_anomalies
 from correlator import build_timeline, correlate_events
 from investigator import investigate_incident
+from web_research import research_incident
 
 def load_incident(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
@@ -92,18 +94,45 @@ def display_investigation(incident):
         for item in hypothesis["missing_evidence"]:
             print(f"   - {item}")
         print("-" * 60)
-    print("\nThese are preliminary hypotheses, "
-        "not confirmed root causes.")
+    print("\nThese are preliminary hypotheses, not confirmed root causes.")
+
+def display_external_research(incident):
+    print("\nEXTERNAL RESEARCH")
+    print("=" * 60)
+    try:
+        result = research_incident(incident)
+        print(f"Search query: {result['query']}")
+        print(f"Status: {result['message']}")
+        sources = result.get("sources", [])
+        if not sources:
+            print("No external sources were retrieved.")
+            return
+        for index, source in enumerate(sources,start=1):
+            print(f"\nSOURCE {index}")
+            print("-" * 60)
+            print(f"Title: {source['title']}")
+            print(f"URL: {source['url']}")
+            content = source.get("content", "")
+            if content:
+                print("\nRetrieved content:")
+                print(content[:2000])
+            else:
+                print("No readable webpage content returned.")
+    except requests.RequestException as error:
+        print(f"TinyFish API request failed: {error}")
+    except (RuntimeError, ValueError) as error:
+        print(f"External research failed: {error}")
 
 def main():
-    project_root = Path(__file__).resolve().parent.parent
-    data_path = project_root / "data" / "incidents.json"
+    project_root = (Path(__file__).resolve().parent.parent)
+    data_path = (project_root / "data" / "incidents.json")
     incident = load_incident(data_path)
     display_incident(incident)
     display_anomalies(incident)
     display_timeline(incident)
     display_correlations(incident)
     display_investigation(incident)
+    display_external_research(incident)
 
 if __name__ == "__main__":
     main()
