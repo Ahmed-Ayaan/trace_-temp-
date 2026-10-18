@@ -2,12 +2,10 @@
 setlocal
 
 cd /d "%~dp0"
-
 echo ========================================
 echo             TRACE LAUNCHER
 echo ========================================
 echo.
-
 if not exist ".venv\Scripts\python.exe" (
     echo ERROR: Python virtual environment not found.
     echo.
@@ -17,13 +15,11 @@ if not exist ".venv\Scripts\python.exe" (
     pause
     exit /b 1
 )
-
 if not exist "frontend\package.json" (
     echo ERROR: Frontend package.json not found.
     pause
     exit /b 1
 )
-
 if not exist "frontend\node_modules" (
     echo Installing frontend dependencies...
     cd frontend
@@ -42,10 +38,8 @@ start "TRACE Frontend" cmd /k "cd /d "%CD%\frontend" && npm run dev"
 
 echo Waiting for services to initialize...
 timeout /t 5 /nobreak >nul
-
 echo Opening TRACE dashboard...
 start "" "http://localhost:5173"
-
 echo.
 echo TRACE startup commands executed.
 echo Keep the backend and frontend windows open.
