@@ -1,5 +1,5 @@
-from correlator import correlate_events
-from metrics_analyzer import detect_metric_anomalies
+from src.correlator import correlate_events
+from src.metrics_analyzer import detect_metric_anomalies
 
 def investigate_incident(incident):
     events = incident["events"]
