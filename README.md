@@ -5,301 +5,306 @@
 
 **From scattered incident signals to evidence-backed root-cause hypotheses.**
 
-TRACE is an AI-assisted incident investigation system designed to help
-developers understand application failures by analyzing incident data,
-detecting metric anomalies, correlating events, researching external
-technical information, and presenting investigation results through an
-interactive dashboard.
-
-Built with Python, FastAPI, React, Vite, and TinyFish.
+TRACE is an AI-assisted incident investigation prototype designed to help developers investigate application failures by analyzing metrics, correlating events, generating potential root-cause hypotheses, and retrieving relevant external technical information.
 
 </div>
 
 ---
 
-## Table of Contents
+## Quick Start
 
-- [Overview](#overview)
-- [The Problem](#the-problem)
-- [Our Approach](#our-approach)
-- [Key Features](#key-features)
-- [System Architecture](#system-architecture)
-- [Investigation Workflow](#investigation-workflow)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Installation and Setup](#installation-and-setup)
-- [Running TRACE](#running-trace)
-- [API](#api)
-- [External Research with TinyFish](#external-research-with-tinyfish)
-- [Current Implementation](#current-implementation)
-- [Limitations and Future Improvements](#limitations-and-future-improvements)
-- [Security](#security)
-- [Project Vision](#project-vision)
+TRACE provides a structured setup process for running the application locally.
+
+### Prerequisites
+
+Install the following:
+
+- Python 3
+- Node.js and npm
+- Git
+- A TinyFish API key for external research
+
+### 1. Clone the Repository
+
+```bash
+git clone <YOUR_REPOSITORY_URL>
+cd <YOUR_REPOSITORY_DIRECTORY>
+```
+
+Replace the placeholders with your actual GitHub repository URL and directory name.
+
+### 2. Install Backend Dependencies
+
+**macOS / Linux**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+**Windows PowerShell**
+
+```powershell
+py -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+### 3. Configure Environment Variables
+
+Create a local `.env` file using `.env.example` as a reference.
+
+**macOS / Linux**
+
+```bash
+cp .env.example .env
+```
+
+Add your TinyFish API key and any other required environment variables to `.env`.
+
+Never commit your actual API key or other secrets to GitHub.
+
+### 4. Install Frontend Dependencies
+
+From the repository root:
+
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+### 5. Start TRACE
+
+You can start the application using the appropriate startup script or launch the backend and frontend manually.
+
+#### Option A: Use the Startup Script
+
+The following scripts are intended for their respective operating systems:
+
+- **macOS:** Run `Start TRACE.command`.
+- **Windows:** Run `start-trace.bat`.
+- **Linux:** Run `./start-trace.sh`.
+
+These scripts must be included in the repository and tested on their respective operating systems before use.
+
+The Python environment and backend dependencies must be installed first.
+
+#### Option B: Start the Application Manually
+
+**Start the backend**
+
+From the repository root, activate the Python virtual environment and run:
+
+```bash
+source .venv/bin/activate
+python -m uvicorn src.api:app --reload
+```
+
+On Windows PowerShell, activate the environment using:
+
+```powershell
+.venv\Scripts\Activate.ps1
+python -m uvicorn src.api:app --reload
+```
+
+The backend should be available at:
+
+`http://127.0.0.1:8000`
+
+**Start the frontend**
+
+Open a second terminal and navigate to the frontend directory:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open the local URL printed by Vite, usually:
+
+`http://localhost:5173`
+
+Keep both servers running while using TRACE.
 
 ---
 
 ## Overview
 
-Modern applications generate large amounts of operational data.
-When an application fails, engineers must investigate logs, metrics,
-deployment events, configuration changes, and technical documentation
-to determine what happened.
+Application failures often produce multiple signals across logs, metrics, deployments, and external technical systems. Investigating these signals manually can be time-consuming and difficult.
 
-TRACE aims to make this process faster and more structured.
+TRACE brings these signals together into a unified investigation workflow.
 
-It brings incident information together, identifies unusual metric
-behavior, correlates relevant events, retrieves external technical
-context, and organizes the findings into an investigation report.
+The prototype analyzes incident data, detects metric anomalies, constructs an incident timeline, correlates events, ranks preliminary hypotheses, and uses TinyFish to retrieve relevant external technical information.
 
-Instead of presenting an unexplained root-cause conclusion, TRACE
-emphasizes the relationship between observed evidence, candidate
-hypotheses, and the additional checks needed to verify them.
+A React dashboard presents the investigation results through a centralized interface powered by a FastAPI backend.
 
-The current implementation includes a Python investigation engine,
-a FastAPI backend, a React-based dashboard, and TinyFish-powered
-external research.
+## Features
 
-Incident data currently comes from local JSON fixtures.
+### 1. Metric Anomaly Detection
 
-### Core Objective
+TRACE analyzes incident metrics to identify unusual changes in observed values.
 
-Transform fragmented incident information into a structured,
-evidence-oriented investigation that helps developers identify
-plausible causes and determine what to investigate next.
+The metric analyzer compares measurements against a baseline and identifies significant increases using configurable thresholds.
 
----
+Detected anomalies can include:
 
-## The Problem
+- Metric name
+- Observation timestamp
+- Baseline value
+- Observed value
+- Percentage increase
+- Severity classification
 
-When a production service fails, the available evidence is often
-distributed across multiple systems.
+The exact fields depend on the metric analyzer's implementation and the available incident data.
 
-### 1. Logs
+### 2. Incident Timeline
 
-Logs describe errors and application behavior, but individual error
-messages do not necessarily reveal the underlying cause.
+TRACE organizes incident events chronologically to help developers understand how a failure developed.
 
-### 2. Metrics
+The timeline can include:
 
-Metrics reveal changes in latency, error rates, resource utilization,
-and other operational measurements.
-
-However, an unusual metric does not automatically explain why the
-system failed.
-
-### 3. Deployments and Configuration Changes
-
-A deployment or configuration change occurring near an incident
-may be relevant, but temporal proximity alone does not establish
-causation.
-
-### 4. External Technical Information
-
-Documentation, release notes, known issues, and technical discussions
-can provide useful context.
-
-However, a similar issue found online is not proof that it caused
-the current incident.
-
-### 5. Investigation Complexity
-
-Engineers must connect these signals, compare competing explanations,
-identify missing evidence, and decide which diagnostic action to
-perform next.
-
-TRACE is designed to organize these activities into a more
-transparent investigation workflow.
-
----
-
-## Our Approach
-
-TRACE separates the investigation into several stages.
-
-| Stage | Responsibility |
-|---|---|
-| Analyze | Examine available incident metrics and identify unusual behavior. |
-| Correlate | Organize incident events chronologically and identify potentially relevant relationships. |
-| Investigate | Combine available evidence and evaluate candidate explanations. |
-| Research | Retrieve relevant external technical information using TinyFish. |
-| Present | Display investigation findings through the dashboard and backend response. |
-
-The goal is not simply to produce a root-cause label.
-
-The goal is to make the investigation understandable and actionable.
-
-### Design Principles
-
-- Evidence before conclusions.
-- Distinguish observed facts from inferred explanations.
-- Treat correlation as a lead, not proof of causation.
-- Preserve external source context wherever available.
-- Make uncertainty and missing evidence explicit.
-- Recommend diagnostic checks that can help verify or reject a hypothesis.
-
----
-
-## Key Features
-
-### 1. Incident Data Processing
-
-TRACE processes structured incident information containing relevant
-events, timestamps, metric measurements, and deployment information.
-
-The current implementation uses local JSON incident fixtures.
-
-This provides a controlled environment for developing and testing
-the investigation engine.
-
-### 2. Metric Anomaly Analysis
-
-The metric analyzer examines available measurements to identify
-unusual behavior.
-
-Depending on the available data and configured rules, this can help
-identify changes in metrics such as:
-
-- Database latency.
-- Application response time.
-- Error rates.
-- Resource utilization.
-- Other numerical operational measurements.
-
-An anomaly indicates behavior worth investigating. It does not
-necessarily identify the root cause.
+- Metric measurements
+- Application log events
+- Deployment events
 
 ### 3. Event Correlation
 
-TRACE organizes relevant events around the incident timeline.
+TRACE identifies relationships between incident events using their timestamps.
 
-This allows the investigation to examine relationships between:
+The correlation component helps highlight events occurring near deployments and other potentially significant incident signals.
 
-- Application errors.
-- Metric changes.
-- Deployment events.
-- Other recorded incident signals.
+Temporal proximity provides a starting point for investigation; it does not independently establish causation.
 
-Temporal relationships help identify candidate explanations that
-require further verification.
+### 4. Hypothesis Generation and Ranking
 
-### 4. Investigation Engine
+The investigation engine evaluates internal incident evidence and generates preliminary explanations for the failure.
 
-The investigation engine combines the available analysis and
-correlation results into a structured investigation.
+Potential causes are ranked using rule-based evidence scoring.
 
-It helps organize the evidence and candidate explanations so that
-the incident can be examined systematically.
+The investigation results can include:
 
-Current hypothesis generation and scoring remain preliminary and
-should not be interpreted as a fully autonomous root-cause reasoning
-system.
+- Candidate root causes
+- Supporting evidence
+- Missing evidence
+- Preliminary investigation scores
+- Hypothesis status
+
+These scores represent rule-based rankings, not calibrated probabilities.
 
 ### 5. External Technical Research
 
-TRACE integrates TinyFish-based research to retrieve relevant
-external technical information.
+TRACE integrates TinyFish to search for relevant external technical information.
 
-Research can help identify documentation, release notes, known
-issues, and other technical material related to an incident.
+The research workflow can:
 
-External information provides additional context. It must still be
-evaluated against the incident's actual evidence.
+1. Construct a search query from incident information.
+2. Search for relevant technical sources.
+3. Retrieve candidate webpages.
+4. Return research results and source information.
 
-### 6. FastAPI Backend
+External findings can provide additional context for investigating an incident.
 
-The backend exposes investigation functionality through an HTTP API.
+Retrieved sources are supporting material, not proof that a particular issue caused the failure.
 
-The React frontend communicates with the Python backend to request
-investigations and display the resulting information.
+### 6. Interactive Investigation Dashboard
 
-### 7. Interactive Web Dashboard
+The React dashboard provides a centralized interface for reviewing investigation results.
 
-TRACE includes a React and Vite frontend.
+It presents the information returned by the current implementation, which may include:
 
-The dashboard provides a graphical interface for interacting with
-the investigation system and examining the available investigation
-results.
+- Incident overview
+- Affected service and technology information
+- Detected anomalies
+- Incident timeline
+- Ranked hypotheses
+- Supporting and missing evidence
+- External research results
+- Links to original research sources
 
-### 8. Modular Architecture
+### 7. FastAPI Backend
 
-The project separates the API, investigation logic, metric analysis,
-event correlation, and external research into different modules.
+FastAPI exposes the investigation workflow through an HTTP API.
 
-This separation makes individual components easier to understand,
-debug, test, and extend.
+The frontend sends an incident identifier to the backend and receives a structured JSON response containing the available investigation results.
+
+The exact response fields depend on the API implementation.
 
 ---
 
-## System Architecture
+## Architecture
 
-The current system is organized into three primary layers.
+TRACE consists of three primary layers.
 
-### Architecture Diagram
+### Investigation Engine
 
-```mermaid
-flowchart TB
+The Python investigation engine processes incident data.
 
-    subgraph FRONTEND["Frontend Layer"]
-        UI["React Dashboard"]
-        VITE["Vite Development Server"]
-        CLIENT["API Client"]
-        UI --> CLIENT
-        VITE --- UI
-    end
+Responsibilities include:
 
-    subgraph BACKEND["Backend Layer"]
-        API["FastAPI Application"]
-        ENGINE["Investigation Engine"]
-        METRICS["Metric Analyzer"]
-        CORR["Event Correlator"]
-        DATA["Incident JSON Data"]
+- Metric anomaly detection
+- Timeline construction
+- Event correlation
+- Hypothesis generation
+- Preliminary hypothesis ranking
 
-        API --> ENGINE
-        ENGINE --> METRICS
-        ENGINE --> CORR
-        ENGINE --> DATA
-    end
+### External Research Layer
 
-    subgraph RESEARCH["External Research Layer"]
-        WEB["TinyFish Research"]
-        SOURCES["External Technical Sources"]
+TinyFish provides web-search and webpage-retrieval capabilities.
 
-        WEB --> SOURCES
-    end
+The retrieved information can provide additional technical context for the investigation.
 
-    CLIENT <-->|HTTP / JSON| API
-    ENGINE --> WEB
+Further evidence-grounded verification is needed before external findings can reliably establish a root cause.
 
-    API --> RESPONSE["Structured Investigation Response"]
-    RESPONSE --> CLIENT
-    CLIENT --> UI
+### API and Dashboard Layer
 
+FastAPI exposes the investigation workflow through HTTP endpoints.
 
+React and Vite provide the interactive dashboard used to initiate investigations and display the results.
+
+### Investigation Workflow
+
+```text
+                 Incident Data
+                 incidents.json
+                       |
+                       v
+             Python Investigation Engine
+                       |
+          +------------+------------+
+          |            |            |
+          v            v            v
+       Metrics       Timeline     Event
+       Analysis      Creation   Correlation
+          |            |            |
+          +------------+------------+
+                       |
+                       v
+              Hypothesis Generation
+                       |
+                       v
+             Preliminary Hypothesis
+                    Ranking
+                       |
+                       +-------------------+
+                       |                   |
+                       v                   v
+                Internal Evidence   TinyFish Research
+                       |                   |
+                       +---------+---------+
+                                 |
+                                 v
+                       Investigation Results
+                                 |
+                                 v
+                              FastAPI
+                                 |
+                                 v
+                         React Dashboard
 ```
 
----
-
-## Investigation Workflow
-
-TRACE follows a structured workflow to turn incident data into investigation findings.
-
-### Step 1: Incident Ingestion
-The system loads incident information containing logs, metric measurements, timestamps, deployment events, and relevant metadata. The current prototype uses static JSON fixtures.
-
-### Step 2: Metric Analysis
-The metric analyzer examines available measurements and identifies potential anomalies. Results depend on the quality and quantity of the available data.
-
-### Step 3: Event Correlation
-The correlator organizes events chronologically and identifies potentially relevant relationships. A metric increase shortly after a deployment may justify investigation, but temporal proximity does not prove causation.
-
-### Step 4: Investigation
-The investigation engine combines incident information, metric analysis, and event correlation to organize the available evidence and candidate explanations.
-
-### Step 5: External Research
-The research component uses TinyFish to search for relevant technical documentation, release notes, known issues, and other external sources.
-
-### Step 6: Results Presentation
-The FastAPI backend returns investigation results to the React frontend, which presents the available findings through the dashboard.
+The diagram represents the intended investigation flow. The actual integration between internal evidence, external research, and hypothesis ranking depends on the implemented code.
 
 ---
 
@@ -309,12 +314,14 @@ The FastAPI backend returns investigation results to the React frontend, which p
 |---|---|
 | Python | Investigation logic and data processing |
 | FastAPI | Backend API |
-| React | Interactive user interface |
-| Vite | Frontend development and build tooling |
+| Pydantic | API request validation |
+| Requests | HTTP communication with external services |
+| TinyFish | External web research |
+| React | Dashboard interface |
+| Vite | Frontend development server and build tooling |
 | JavaScript | Frontend application logic |
 | CSS | Dashboard styling |
-| TinyFish | External technical research |
-| JSON | Incident fixtures and structured data |
+| JSON | Incident data representation |
 | Git | Version control |
 | GitHub | Source-code hosting |
 
@@ -322,10 +329,22 @@ The FastAPI backend returns investigation results to the React frontend, which p
 
 ## Project Structure
 
+The repository is organized into backend, data, and frontend components.
+
 ```text
-TRACE/
+trace-ai-incident-investigator/
+│
 ├── data/
 │   └── incidents.json
+│
+├── src/
+│   ├── api.py
+│   ├── main.py
+│   ├── metrics_analyzer.py
+│   ├── correlator.py
+│   ├── investigator.py
+│   └── web_research.py
+│
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx
@@ -337,58 +356,52 @@ TRACE/
 │   ├── package.json
 │   ├── package-lock.json
 │   └── vite.config.js
-├── src/
-│   ├── api.py
-│   ├── correlator.py
-│   ├── investigator.py
-│   ├── main.py
-│   ├── metrics_analyzer.py
-│   └── web_research.py
+│
 ├── .env.example
 ├── .gitignore
-├── requirements.txt
-└── README.md
+├── README.md
+└── requirements.txt
 ```
 
-**Note:** Adjust this structure to match your actual repository. Do not list files that do not exist.
+*The structure above represents the intended organization. Verify filenames against the actual repository before publishing.*
 
 ### Backend Modules
 
 | File | Responsibility |
 |---|---|
-| `src/api.py` | FastAPI application and API routes |
+| `src/api.py` | FastAPI application and investigation endpoint |
 | `src/main.py` | Command-line investigation entry point |
-| `src/investigator.py` | Investigation orchestration |
-| `src/metrics_analyzer.py` | Metric analysis |
-| `src/correlator.py` | Event correlation |
-| `src/web_research.py` | TinyFish-based external research |
-| `data/incidents.json` | Local incident fixtures |
+| `src/metrics_analyzer.py` | Metric anomaly detection |
+| `src/correlator.py` | Timeline construction and event correlation |
+| `src/investigator.py` | Investigation orchestration and preliminary hypothesis ranking |
+| `src/web_research.py` | TinyFish search and webpage retrieval |
 
 ### Frontend Modules
 
 | File | Responsibility |
 |---|---|
-| `frontend/src/App.jsx` | Main React application |
-| `frontend/src/api.js` | Backend communication |
-| `frontend/src/main.jsx` | Frontend entry point |
-| `frontend/src/app.css` | Application-specific styling |
-| `frontend/src/index.css` | Global styles |
-| `frontend/package.json` | Frontend dependencies and scripts |
-| `frontend/vite.config.js` | Vite configuration |
+| `frontend/src/App.jsx` | Main dashboard interface |
+| `frontend/src/api.js` | Communication with the FastAPI backend |
+| `frontend/src/app.css` | Dashboard component styling |
+| `frontend/src/index.css` | Global styling |
+| `frontend/src/main.jsx` | React application entry point |
+
+---
+
+## Prerequisites
+
+Before running TRACE manually, ensure that you have:
+
+- Python installed
+- Node.js and npm installed
+- Git installed
+- A TinyFish API key for external research
+
+The manual setup instructions below assume macOS or Linux unless otherwise specified.
 
 ---
 
 ## Installation and Setup
-
-### Prerequisites
-
-Install the following:
-
-- Python 3
-- Node.js and npm
-- Git
-
-A TinyFish API credential is required if you intend to use external research.
 
 ### 1. Clone the Repository
 
@@ -401,152 +414,129 @@ Replace the placeholders with your actual repository URL and directory name.
 
 ### 2. Create a Python Virtual Environment
 
-**macOS / Linux**
-
 ```bash
 python3 -m venv .venv
+```
+
+Activate it:
+
+```bash
 source .venv/bin/activate
 ```
 
-**Windows PowerShell**
-
-```powershell
-py -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-### 3. Install Backend Dependencies
-
-Run this from the repository root:
+### 3. Install Python Dependencies
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Ensure `requirements.txt` contains the dependencies required by your current backend.
-
 ### 4. Configure Environment Variables
 
-Create a local `.env` file using `.env.example` as a reference.
+Create a local `.env` file in the project root using `.env.example` as a reference.
 
-**macOS / Linux**
+For macOS or Linux:
 
 ```bash
 cp .env.example .env
 ```
 
-Add the environment variables required by your application, using the exact names expected by your code.
+Add your TinyFish API key:
 
-Never commit `.env` or API credentials to GitHub.
-
-### 5. Install Frontend Dependencies
-
-From the repository root:
-
-```bash
-cd frontend
-npm install
+```dotenv
+TINYFISH_API_KEY=your_tinyfish_api_key_here
 ```
 
----
+Replace the placeholder with your actual key.
 
-## Running TRACE
+**Security:** Never commit your actual `.env` file or API key to GitHub.
 
-The backend and frontend run as separate development processes. Both must be running to use the local dashboard.
+The repository's `.env.example` should document the environment variables required by the implementation without containing real credentials.
 
-### 1. Start the Backend
+### 5. Start the Backend
 
-From the repository root, activate the virtual environment and run:
+From the project root, activate the virtual environment if necessary:
 
 ```bash
-uvicorn src.api:app --reload
+source .venv/bin/activate
 ```
 
-The backend should be available at:
+Start FastAPI:
+
+```bash
+python -m uvicorn src.api:app --reload
+```
+
+The backend will normally be available at:
 
 `http://127.0.0.1:8000`
 
-FastAPI's interactive API documentation is normally available at:
+### 6. Access the API Documentation
+
+Open:
 
 `http://127.0.0.1:8000/docs`
 
-Keep this terminal open.
+The interactive documentation allows you to inspect the available endpoints and test the investigation API.
 
-### 2. Start the Frontend
+### 7. Start the Frontend
 
-Open a second terminal. From the repository root, run:
+Open a second terminal and navigate to the frontend directory:
 
 ```bash
 cd frontend
+```
+
+Install the frontend dependencies if you have not already done so:
+
+```bash
+npm install
+```
+
+Start the Vite development server:
+
+```bash
 npm run dev
 ```
 
-Open the local address printed by Vite. With its default configuration, this is usually:
+Open the local URL printed by Vite, usually:
 
 `http://localhost:5173`
 
-Keep this terminal open as well.
-
-### 3. Stop the Servers
-
-Press `Ctrl + C` in each terminal to stop its corresponding server.
-
-### 4. Run the Investigation Without the Dashboard
-
-From the repository root, with the Python environment activated:
-
-```bash
-python src/main.py
-```
-
-This runs the command-line workflow rather than the integrated web application.
-
-### Troubleshooting
-
-**Frontend cannot communicate with the backend**
-
-- Confirm that the backend is running.
-- Check the API base URL in `frontend/src/api.js`.
-- Verify that the frontend calls routes defined in `src/api.py`.
-- Check the browser console and backend terminal for errors.
-- Verify the backend's CORS configuration.
-
-**Backend fails to start**
-
-- Activate the correct virtual environment.
-- Install the required dependencies.
-- Check Python imports and configuration.
-- Read the complete error traceback.
-
-**Frontend fails to start**
-
-- Confirm Node.js and npm are installed.
-- Run `npm install` inside `frontend/`.
-- Check the scripts in `frontend/package.json`.
-
-**External research fails**
-
-- Verify the required environment variables.
-- Check API credentials and connectivity.
-- Inspect errors returned by the research component.
+Keep both the backend and frontend servers running while using the local application.
 
 ---
 
 ## API
 
-TRACE uses FastAPI to expose investigation functionality through HTTP endpoints.
+### `POST /investigate`
 
-The frontend communicates with the backend to request and display investigation results.
+Initiates an investigation for the specified incident.
 
-### Investigation Endpoint
+#### Example Request
 
-The intended primary operation is an HTTP request that triggers an investigation.
+```json
+{
+  "incident_id": "INC-001"
+}
+```
 
-For example:
+#### Response
 
-`POST /investigate`
+The endpoint returns a structured JSON object containing the available incident information and investigation results.
 
-The actual endpoint, request format, and response schema must match the implementation in `src/api.py`.
+Depending on the implementation, response fields may include:
+
+- `incident_id`
+- `service`
+- `description`
+- `technology`
+- `anomalies`
+- `timeline`
+- `correlations`
+- `hypotheses`
+- `external_research`
+
+The exact request schema, endpoint path, and response fields must match the implementation in `src/api.py`.
 
 ### API Documentation
 
@@ -554,172 +544,69 @@ While the backend is running, open:
 
 `http://127.0.0.1:8000/docs`
 
-Use this page to inspect the actual routes, request parameters, response models, and supported operations.
+Use the interactive documentation to inspect the available endpoints and test requests.
 
 ---
 
-## External Research with TinyFish
+## Current Limitations
 
-TRACE uses TinyFish to retrieve external technical information that may help explain an incident.
+TRACE is a functional prototype and is not intended to replace a production incident-management system.
 
-The research component is located in:
+Current limitations include:
 
-`src/web_research.py`
-
-### Research Workflow
-
-1. Extract relevant incident details.
-2. Construct a targeted technical search query.
-3. Search for candidate sources.
-4. Fetch relevant pages where supported.
-5. Extract useful technical information.
-6. Preserve source URLs and relevant excerpts.
-7. Evaluate findings against the incident evidence.
-
-### Evidence Quality
-
-External research provides context; it does not independently establish the root cause.
-
-Each finding should be evaluated for relevance, reliability, and consistency with the incident evidence.
-
-A search-result title or snippet is not sufficient proof that a particular issue caused an incident.
-
-### Integration Status
-
-Retrieving external research does not automatically mean that the findings influence hypothesis ranking or verification. Those capabilities require an explicit connection between the research output and the investigation engine.
+- Incident input uses static JSON rather than a production telemetry pipeline.
+- Metric anomaly detection uses a simplified baseline comparison.
+- Event correlation relies on temporal relationships.
+- Hypothesis generation and ranking are preliminary and rule-based.
+- External research retrieval does not, by itself, verify whether a source supports a particular hypothesis.
+- Root-cause hypotheses should not be treated as confirmed diagnoses.
+- Production authentication, authorization, monitoring, and deployment infrastructure are outside the current prototype scope.
 
 ---
 
-## Current Implementation
+## Future Development
 
-TRACE is an actively developed prototype.
+Potential improvements include:
 
-| Component | Status |
-|---|---|
-| Static incident fixtures | Implemented |
-| Python investigation engine | Implemented |
-| Metric analysis | Implemented with preliminary detection logic |
-| Event correlation | Implemented |
-| FastAPI backend | Implemented |
-| React and Vite frontend | Implemented |
-| Frontend-backend integration | Integrated |
-| TinyFish research component | Implemented |
-| Live production telemetry ingestion | Not implemented |
-| Fully autonomous root-cause verification | Not implemented |
+- Real-time telemetry ingestion
+- More robust statistical anomaly detection
+- LLM-assisted hypothesis generation
+- Evidence-grounded reasoning over retrieved technical sources
+- Hypothesis verification and contradictory-evidence analysis
+- More sophisticated confidence estimation
+- Investigation history and persistence
+- Automated testing against diverse incident scenarios
+- Docker-based packaging and deployment
 
-These statuses describe the project's current scope, not production readiness.
-
-### Current Data Source
-
-Incident information currently comes from:
-
-`data/incidents.json`
-
-This provides reproducible scenarios for developing and testing the investigation workflow.
-
-### Current Analysis
-
-Metric detection and event correlation help identify potential investigation leads. Their results depend on the quality and quantity of available data.
-
-### Current Investigation Logic
-
-The investigation engine organizes available information into structured findings.
-
-Candidate explanations and scores are preliminary. They are not calibrated probabilities or proof of a verified root cause.
-
-### Current Dashboard
-
-The React frontend communicates with the FastAPI backend and presents the results returned by the current implementation.
-
-The displayed information depends on which investigation fields the backend actually returns.
-
----
-
-## Limitations and Future Improvements
-
-### 1. Live Telemetry Ingestion
-
-**Current limitation:** Incident information comes from local JSON fixtures.
-
-**Future direction:** Integrate real telemetry from application instrumentation, monitoring platforms, and log systems.
-
-### 2. Improved Anomaly Detection
-
-**Current limitation:** The existing detection logic is preliminary.
-
-**Future direction:** Introduce stronger statistical baselines, time-series analysis, and configurable detection methods.
-
-### 3. Evidence-Based Hypothesis Ranking
-
-**Current limitation:** Current candidate generation and scoring are not a complete causal reasoning system.
-
-**Future direction:** Evaluate competing explanations using supporting evidence, contradictory evidence, and missing information.
-
-### 4. Deeper LLM Integration
-
-**Future direction:** Integrate an LLM to help generate candidate hypotheses, summarize evidence, and propose diagnostic checks.
-
-Model-generated conclusions should remain grounded in available evidence and distinguish observations from speculation.
-
-### 5. Research-Driven Investigation
-
-**Future direction:** Connect external research findings to hypothesis evaluation and verification, preserving source context throughout the process.
-
-### 6. Testing and Reliability
-
-**Future direction:** Add automated tests, structured logging, timeouts, retries, stronger error handling, and configuration validation.
-
-### 7. Investigation Evaluation
-
-**Future direction:** Evaluate TRACE against reproducible incidents with known causes.
-
-Measure whether it identifies relevant evidence, ranks plausible explanations, and recommends useful diagnostic actions.
+These are future development directions, not claims about currently implemented features.
 
 ---
 
 ## Security
 
-Follow these practices when developing and running TRACE:
-
-- Store API credentials in environment variables or a local `.env`.
-- Never commit secrets or private tokens.
-- Exclude `.env`, `.venv/`, and `frontend/node_modules/` through `.gitignore`.
-- Use sanitized incident fixtures for public demonstrations.
-- Avoid exposing sensitive production logs or infrastructure details.
-- Validate incoming API requests.
-- Use timeouts and error handling for external requests.
-- Treat externally retrieved content as untrusted input.
+- Keep API keys in environment variables.
+- Never commit `.env` or other secret files.
+- Avoid placing credentials in source code.
+- Treat external webpages as untrusted input.
+- Validate data received by API endpoints.
+- Exclude `.venv/`, `frontend/node_modules/`, and generated cache files from version control.
 
 Production deployments require additional authentication, authorization, monitoring, and infrastructure security controls.
 
 ---
 
-## Project Vision
+## Project Status
 
-The long-term goal of TRACE is to develop a more comprehensive AI-assisted incident investigation system.
+**Functional prototype — under development.**
 
-The intended direction includes:
+TRACE demonstrates an integrated workflow for internal incident analysis, preliminary root-cause hypothesis generation, external technical research, and dashboard-based investigation.
 
-- Structured telemetry ingestion.
-- Statistical anomaly detection.
-- Timeline-based event correlation.
-- Evidence-grounded hypothesis generation.
-- External technical research.
-- Competing-hypothesis evaluation.
-- Explicit verification of candidate explanations.
-- Actionable diagnostic recommendations.
-- An interactive investigation dashboard.
-
-The objective is not to replace engineering judgment with an unexplained AI-generated answer.
-
-It is to reduce the effort required to connect fragmented evidence, evaluate competing explanations, and determine what to investigate next.
+The next stage is to improve evidence verification, investigation quality, and robustness.
 
 ---
 
 <div align="center">
 
-### TRACE
-
-**Make the investigation inspectable.**
+**TRACE — From incident signals to structured investigation.**
 
 </div>
